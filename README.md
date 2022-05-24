@@ -182,3 +182,48 @@ undefined
 >
 
 ```
+
+### 알려진 이슈
+
+1. 한글 입력 시 Uncaught SyntaxError
+
+예시 
+```sql
+>alasql('select id as 아이디 from Book')
+Uncaught SyntaxError: Parse error on line 1:
+select id as 아이디 from Book
+-------------^
+Expecting 'LITERAL', 'BRALITERAL', 'NUMBER', 'STRING', 'NSTRING', got 'INVALID'
+>
+```
+
+쌍따옴표면 홑따옴표, 홑따옴표면 쌍싸옴표로 한글을 감싸주기
+
+```sql
+> >alasql('select id as "아이디" from Book')
+[
+{ "'아이디'": 1 },
+{ "'아이디'": 2 },
+{ "'아이디'": 3 },
+{ "'아이디'": 4 },
+{ "'아이디'": 5 },
+{ "'아이디'": 6 }
+]
+>
+```
+
+백틱으로 감싼 경우는 한글을 홑따옴표로 감싼 뒤 내부에서 이스케이핑
+```sql
+>alasql(`select id as \'아이디\' from Book`)
+[
+  { "'아이디'": 1 },
+  { "'아이디'": 2 },
+  { "'아이디'": 3 },
+  { "'아이디'": 4 },
+  { "'아이디'": 5 },
+  { "'아이디'": 6 }
+]
+>
+```
+
+
