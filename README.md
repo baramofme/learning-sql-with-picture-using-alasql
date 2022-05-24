@@ -181,11 +181,18 @@ Applier, Book, Customer, Delivery, EvalRank, EvalStudent, Eval_1, Eval_2, Inquir
 undefined
 >
 
-```
+````
 
 ### 알려진 이슈
 
-1. 한글 입력 시 Uncaught SyntaxError
+0. 책과 다른 테이블 이름
+
+- 책은 모든 테이블명이 소문자나, 여기서는 첫 글자가 대문자.
+- 다음의 테이블은 alasql 예약어와 이름이 겹쳐서 테이블명이 변경됨
+    - apply : applier
+    - search : search1
+
+2. 한글 입력 시 Uncaught SyntaxError
 
 예시 
 ```sql
