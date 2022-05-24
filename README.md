@@ -2,8 +2,12 @@
 
 ## Overview
 
-result : 책 실습 결과 저장.
-reason : mysql 과 workbench 설치 안되는데 node 는 설치 가능한 환경에서 sql 도서 실습위해 alasql 을 사용
+가치 목표 : 새로운 커리어 탐색
+핵심 결과 : SQL 에 대한 기본 사항 습득과 자신감 얻기
+프로젝트 목적 : 익숙한 환경에서 편하게 연습하고 추후 참고 가증하도록 기록 남기기
+
+- mysql 과 workbench 설치 및 구동 안해도 SQL 실습
+- 자바스크립트 환경(node, npm 등) 사용해 SQL 실습
 
 ## How to
 
