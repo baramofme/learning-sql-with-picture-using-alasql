@@ -1,4 +1,4 @@
-function chap1_ji(alasql){
+function 질문1(alasql){
     alasql(
         `
             SELECT 
@@ -16,4 +16,15 @@ function chap1_ji(alasql){
     })
 }
 
-module.exports = chap1_ji
+function 질문2(alasql){
+    alasql('SELECT * FROM Book;', [], res => {
+            console.table(res)
+        })
+}
+
+console.log('챕터명_사용자명 로드됨')
+
+module.exports = {
+    질문1: 질문1,
+    질문2: 질문2
+}
