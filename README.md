@@ -11,7 +11,7 @@ C:\someDir>dir/w
  C:\someDir 디렉터리
 
 [.]                 [..]
-[.idea]             [node_modules]
+[.idea]             [node_modules]    [examples]
 loadAll.js          package.json
 package-lock.json   invoke_outside.js
 invoke-immediately.js
@@ -42,7 +42,7 @@ Applier, Book, Customer, Delivery, EvalRank, EvalStudent, Eval_1, Eval_2, Inquir
 undefined
 
 // exports 객체에 담긴 함수를 변수에 받아서 실행
-> const {chap1} = require("./invoke_outside.js")
+> const {chap1} = require("./examples/invoke_outside.js")
 undefined
 > chap1(alasql)
 ┌─────────┬────┬────────────────────────┬───────────┐
@@ -68,7 +68,7 @@ undefined
 undefined
 
 // exports 된 함수 자체를 즉시 실행
-> require("./invoke-immediately.js")(alasql)
+> require("./examples/invoke-immediately.js")(alasql)
 ┌─────────┬────┬────────────────────────┬───────────┐
 │ (index) │ id │       book_name        │ publisher │
 ├─────────┼────┼────────────────────────┼───────────┤
