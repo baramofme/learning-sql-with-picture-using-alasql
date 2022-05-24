@@ -1,9 +1,11 @@
 # Learning sql with picture using alasql
 
-목적 : 책 실습 결과 저장.
-이유 : mysql 과 workbench 설치 안되는데 node 는 설치 가능한 환경에서 sql 도서 실습위해 alasql 을 사용
+## Overview
 
-### 이용방법
+result : 책 실습 결과 저장.
+reason : mysql 과 workbench 설치 안되는데 node 는 설치 가능한 환경에서 sql 도서 실습위해 alasql 을 사용
+
+## How to
 
 생성된 파일이 있는 곳에 alasql 패키지를 설치하고 node repl 을 실행시켜서 alasql 로 SQL 책 실습을 한다.
 
