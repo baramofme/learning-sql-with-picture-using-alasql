@@ -1,5 +1,6 @@
 const alasql = require('alasql');
 const repl = require('repl');
+const chap1 = require("./chap1/ji-chap1")
 
 function initDB(){
 
@@ -328,6 +329,13 @@ function initDB(){
     return alasql
 }
 
+const populatedAlasql = initDB(alasql)
 
 // Global and local scope 참조해서 repl에서 required 없이 alasql 에 바로 접근하도록 함
-repl.start({prompt: '>'}).context.alasql = initDB(alasql);
+const local = repl.start({prompt: '>'})
+local.context.alasql = populatedAlasql
+local.context.ji = {
+    chap1: {
+        q1: () =>{ chap1(populatedAlasql) }
+    }
+}

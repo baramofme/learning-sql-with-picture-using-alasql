@@ -10,12 +10,10 @@ function chap1_ji(alasql){
                 id, book_name, price 
             FROM 
                 Book;
-        `
-        ,[],
-        (res) => {
-            console.table(res[0])
-            console.table(res[1])
-        })
+        `, [], resArr => {
+        console.table(resArr[0])
+        console.table(resArr[1])
+    })
 }
 
 module.exports = chap1_ji
