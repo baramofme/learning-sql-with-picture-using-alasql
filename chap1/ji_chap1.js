@@ -80,9 +80,13 @@ function q3(alasql){
 
 console.log('ji 의 chap1 로드됨')
 
-module.exports = {
-    review,
-    q1,
-    q2,
-    q3,
+module.exports = (populatedAlasql)=> {
+    // 클로저처리가 되어서 populatedAlasql 가 클로저 내부에 저장됨.
+    // 리턴되는 함수가 호출될 때 부모 클로저 안에 populatedAlasql 에 접근 가능
+    return {
+        review: () =>{ review(populatedAlasql)},
+        q1: () =>{ q1(populatedAlasql) },
+        q2: () =>{ q2(populatedAlasql) },
+        q3: () =>{ q3(populatedAlasql) }
+    }
 }
