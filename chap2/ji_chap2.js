@@ -121,6 +121,9 @@ function review(alasql){
     5. BOOLEAN 연산
     True 는 1, FALSE 는 0 테이블에 TINYINT(1) 이라서 1자리 정수라 다른 값도 들어가버림
     = 과 IS 를 사용할 수 있지만 좀 다름
+    
+    = 는 True False 를 1 과 0 으로 바꿔서 평가한다.
+    IS 는 기준점 False 를 0 으로 잡고 그 외의 모든 것을 True 로 평가한다.
 
     -------------------------------------
     = 는 True 를 1 , False 를 0 으로 변환해서 비교하므로, 값이 딱 맞아야 함.  
@@ -174,14 +177,165 @@ function review(alasql){
 
     -------------------------------------
         
-    3. 쉼표나 마침표 등 사이에는 공백 필요 없고, 예약어 등에는 공백 필요
+    3. 문자열 연산(검색)
     
-    SELECT book_name,price,book_name
-    FROM Book
+    Where 절에서 값이 특정 문자열과 일치하는 지 일부가 포함되는 지 연산 가능
+    
+    = 대소문자와 단어 뒤 공백 상관없이 일치 검색
+    = BINARY 대소문자 공백 정확히 일치 검색
+    LIKE 문자열 뒤 공백 정확히 일치
+    LIKE BINARY 대소문자 정확히 일치
+    LIKE % 일부 
+    
+    근데 .. ALASQL 은 자바스크립트 객체로 변환된 상태라 SQL 과 문자열 연산 결과가 좀 다르다.
+    MySQL 이랑 똑같은 결과를 내려고 하니까. 평가는 자바스크립트로 하고, AS 로 열 헤더 내용만 바꾸는 것이 곡예하는 거 같다. ㅋ
+    
+    -------------------------------------
+    
+    MYSQL 에서 = 연산자로 문자열 비교를 하면 다음과 같이 결과가 나온다.
+    
+    >console.table(alasql('select id,val as "val = \\'a\\'"from Search_1 where val LIKE "A%"'))
+    ┌─────────┬────┬─────────────┐
+    │ (index) │ id │ 'val = 'a'' │
+    ├─────────┼────┼─────────────┤
+    │    0    │ 1  │     'A'     │  // 대소문자 구분 없이
+    │    1    │ 2  │     'a'     │  
+    │    2    │ 3  │    'A  '    │  // 문자열 끝 공백 무시
+    └─────────┴────┴─────────────┘  
+
+    대소문자와 끝공백 무시 문제 해결하려면 BINARY 키워드를 쓰면 된다.
         
-    4. * 는 테이블 원래 열 순서로, 그게 아니면 적어둔 순서대로 조회됨
+    >console.table(alasql('select id,val, val = "A" or val like "a%" as "val = \\'A\\'", val = "A" as "val = BINARY \\'A\\'"from Search_1'))
+    ┌─────────┬────┬───────┬─────────────┬────────────────────┐
+    │ (index) │ id │  val  │ 'val = 'A'' │ 'val = BINARY 'A'' │  // BINARY 사용하면
+    ├─────────┼────┼───────┼─────────────┼────────────────────┤
+    │    0    │ 1  │  'A'  │    true     │        true        │
+    │    1    │ 2  │  'a'  │    true     │       false        │  // 대소문자를 무시하지 않고 구분하고
+    │    2    │ 3  │ 'A  ' │    true     │       false        │  // 문자끝 공백도 무시하지 않고 구분한다.
+    │    3    │ 4  │  'B'  │    false    │       false        │  // 당연히 다른 문자는 구분을 하지, BINARY 안 써도.
+    └─────────┴────┴───────┴─────────────┴────────────────────┘
+
+    LIKE 는 = 와 다른 점이, 대소문자 구분은 무시하는데, 끝문자 공백은 무시하지 않는다.
     
-    5. AS 는 결과 열의 별명을 붙인다.
+    >console.table(alasql('select id,val, val like "A%" or val like "a%" as "val = \\'A\\'", val like "A" or val like "a" as "val like \\'A\\'" from Search_1'))
+    ┌─────────┬────┬───────┬─────────────┬────────────────┐
+    │ (index) │ id │  val  │ 'val = 'A'' │ 'val like 'A'' │
+    ├─────────┼────┼───────┼─────────────┼────────────────┤
+    │    0    │ 1  │  'A'  │    true     │      true      │
+    │    1    │ 2  │  'a'  │    true     │      true      │
+    │    2    │ 3  │ 'A  ' │    true     │     false      │ // LIKE 는 일치 여부 연산 때, 끝 이후 공백을 신경쓴다.
+    │    3    │ 4  │  'B'  │    false    │     false      │
+    └─────────┴────┴───────┴─────────────┴────────────────┘
+
+    >console.table(alasql('select id,val, val like "A%" or val like "a%" as "val = \\'A\\'", val like "A" or val like "a" as "val like \\'A\\'", val = "A" as "val like binary \\'A\\'" from Search_1'))
+    ┌─────────┬────┬───────┬─────────────┬────────────────┬───────────────────────┐
+    │ (index) │ id │  val  │ 'val = 'A'' │ 'val like 'A'' │ 'val like binary 'A'' │
+    ├─────────┼────┼───────┼─────────────┼────────────────┼───────────────────────┤
+    │    0    │ 1  │  'A'  │    true     │      true      │         true          │
+    │    1    │ 2  │  'a'  │    true     │      true      │         false         │ // like binary 는 대소문자 신경써서 일치여부 연산한다.
+    │    2    │ 3  │ 'A  ' │    true     │     false      │         false         │
+    │    3    │ 4  │  'B'  │    false    │     false      │         false         │
+    └─────────┴────┴───────┴─────────────┴────────────────┴───────────────────────┘
+    
+    -------------------------------------        
+    
+    4. LIKE 임의의 문자열 포함과 문자열 이스케이프
+    
+    문자열 일치가 아니라 일부를 포함할 경우도 검색이 가능하다.
+    
+    >console.table(alasql('select product_name, product_name like "약용_입__", product_name like "약용%"  from Product'))
+    ┌─────────┬──────────────────────┬───────────────────────────────┬───────────────────────────┐
+    │ (index) │     product_name     │ product_name LIKE '약용_입__'  │ product_name LIKE '약용%'  │
+    ├─────────┼──────────────────────┼───────────────────────────────┼───────────────────────────┤
+    │    0    │    '약용 입욕제'       │             true              │           true            │ // _ 는 임의의 한 글자만 포함
+    │    1    │    '약용 핸드솝'       │             false             │           true            │ // % 는 임의의 0개 이상의 글자 포함
+    │    2    │ '천연 아로마 입욕제'    │             false             │           false           │
+    │    3    │    '거품 목욕제'       │             false             │           false           │
+    └─────────┴──────────────────────┴───────────────────────────────┴───────────────────────────┘
+
+    NOT LIKE 예시 
+
+    >console.table(alasql('select product_name, product_name like "%용%", product_name like "%욕%", product_name not like "%제" from Product'))
+    ┌─────────┬──────────────────────┬──────────────────────────┬──────────────────────────┬───────────────────────────────┐
+    │ (index) │     product_name     │ product_name LIKE '%용%' │ product_name LIKE '%욕%' │ 'product_name like not '%제'' │
+    ├─────────┼──────────────────────┼──────────────────────────┼──────────────────────────┼───────────────────────────────┤
+    │    0    │    '약용 입욕제'     │           true           │           true           │             false             │
+    │    1    │    '약용 핸드솝'     │           true           │          false           │             true              │ // 제로 끝나지 않는 유일한 레코드
+    │    2    │ '천연 아로마 입욕제' │          false           │           true           │             false             │
+    │    3    │    '거품 목욕제'     │          false           │           true           │             false             │
+    └─────────┴──────────────────────┴──────────────────────────┴──────────────────────────┴───────────────────────────────┘
+
+    특수문자 % 자체를 검색하려고 하면 어떻게 해야할까? 백슬래시(\) 기호로 이스케이핑 하면 된다.
+        
+    >console.table(alasql('select product_name from Product where product_name like "%100\\%%"'))
+    ┌─────────┬───────────────────┐
+    │ (index) │   product_name    │
+    ├─────────┼───────────────────┤
+    │    0    │  '비누 딸기100%'  │
+    │    1    │ '100%우유_입욕제' │
+    └─────────┴───────────────────┘
+
+
+    5. 날짜와 문자열 대소 비교
+    
+    날짜도 대소 비교가 가능하다.
+    
+    >console.table(alasql('select customer_name, birthday  from Customer ORDER BY ASC')
+    >console.table(alasql('SELECT customer_name, birthday FROM Customer WHERE birthday < "1990-01-01" ORDER BY birthday ASC'))
+    
+    birthday 오름차순 정렬                                    1990-01-01 보다 작은 날짜 레코드만 필터링
+    ┌─────────┬───────────────┬───────────────────────┐   ┌─────────┬───────────────┬───────────────────────┐
+    │ (index) │ customer_name │       birthday        │   │ (index) │ customer_name │       birthday        │
+    ├─────────┼───────────────┼───────────────────────┤   ├─────────┼───────────────┼───────────────────────┤
+    │    0    │   '박하늘'     │ '1976-03-09 00:00:00' │   │    0    │   '박하늘'     │ '1976-03-09 00:00:00' │
+    │    1    │   '김바람'     │ '1984-06-24 00:00:00' │   │    1    │   '김바람'     │ '1984-06-24 00:00:00' │
+    │    2    │   '이구름'     │ '1990-07-16 00:00:00' │   └─────────┴───────────────┴───────────────────────┘
+    │    3    │    '강산'     │ '1991-05-04 00:00:00' │
+    │    4    │   '유바다'     │ '1993-04-21 00:00:00' │
+    └─────────┴───────────────┴───────────────────────┘
+
+    문자열도 대소비교가 되는데.. MYSQL 과 JS 간 문자 체계가 달라서 결과가 다르다. 
+    MYSQL a < A
+    js A < a
+    
+    오름차순 정렬. 즉 대문자가 ASCII 체계에서 앞쪽에 위치해서.. MYSQL 과는 다른 결과가 나옴.
+    
+    오름차순 정렬.          소문자 b 보다 큰 문자열 필터링
+    ┌─────────┬───────┐  ┌─────────┬─────┐
+    │ (index) │  val  │  │ (index) │ val │
+    ├─────────┼───────┤  ├─────────┼─────┤
+    │    0    │  'A'  │  │    0    │ 'c' │
+    │    1    │ 'A  ' │  │    1    │ 'd' │
+    │    2    │  'B'  │  └─────────┴─────┘
+    │    3    │  'C'  │
+    │    4    │  'D'  │
+    │    5    │  'a'  │
+    │    6    │  'b'  │
+    │    7    │  'c'  │
+    │    8    │  'd'  │
+    └─────────┴───────┘
+    
+    숫자로는 10이 4보다 크지만. 사전순(js 에서는 ascii 코드 순)으로는 '4' 가 '10' 보다 뒤에 있다.
+    >console.table(alasql('SELECT 4<10, "4" < "10"'))
+    ┌─────────┬────────┬────────────┐
+    │ (index) │ 4 < 10 │ '4' < '10' │
+    ├─────────┼────────┼────────────┤
+    │    0    │  true  │   false    │
+    └─────────┴────────┴────────────┘
+
+
+    
+    기타
+    
+    자꾸 이식이 안된 기능이 나와서 곤란하네~
+    보니까 ALASQL 이 아니라. SQL.js(SQLite) 를 쓰는 게 나을듯.
+    아래 글을 보니 둘 다 표준 SQL 을 기반으로 만들어 졌고. 
+    https://www.quora.com/What-is-the-difference-between-MySQL-and-SQLite-syntax-and-keywords
+    그러나 SQLITE 에서 구현되지 않은 부분이 있다고 함
+    https://sqlite.org/omitted.html
+    
+    아래분은 w3school 에서 온라인 mysql 쿼리 연습하던데 쿼리 예시가 아주 좋다.
+    https://harrydony.tistory.com/903
         
     `)
 }
@@ -189,15 +343,20 @@ function q1(alasql){
     alasql(
         `
             SELECT 
-                *
+                id,
+                book_name,
+                price
             FROM 
-                Member;
+                Book
+            WHERE
+                publisher='세계사';
                 
             SELECT 
-                member_id,
-                member_name
+                *
             FROM 
-                Member;
+                Book
+            WHERE
+                book_name LIKE '%이탈리아어%'
         `, [], resArr => {
             console.log('/////////////')
             console.log('1장 1번 문제 답')
@@ -209,24 +368,49 @@ function q1(alasql){
 }
 
 function q2(alasql){
-    alasql('SELECT member_name, birthday, tel FROM Member;', [], res => {
+
         console.log('/////////////')
         console.log('1장 2번 문제 답')
         console.log('/////////////')
-        console.table(res)
-        })
+        console.log(`
+        1. price 가 1000 이상
+            price >= 1000
+            
+        2. release_date 가 '2019-11-15' 이외 => 이상/이하가 아니고?
+            release_date NOT '2019-11-15'
+            
+            땡 => release_date <> '2019-11-15' 혹은 release_date != '2019-11-15'
+             
+        3. column_a 가 NULL 인 경우
+           column_a IS NULL
+           column_a <=> NULL
+           
+        4. column_b 안에 '문자열'을 포함하지 않을 경우 => 컬럼 타입가지고 하는 것도 있나?
+           column_b ??
+           
+           땡 => NOT LIKE '%문자열%'   아 글치 포함이 LIKE '%%' 고 포함 안하는 거니 NOT LIKE 였어..
+           
+        나는 명확하지 않을 경우 추론 하려는 시도를 잘 안하는 거 같다. 작은 힌트를 가지고 가설을 세우고.. 이런 거 안하고 무조건 모른다고 해 ㅠㅠ 엉엉.
+        이외의 => 값 바깥 범위 , 같지 않음 != , <>
+        포함하지 않을 => LIKE "%%" + NOT
+        `)
+
 }
 
 function q3(alasql){
-    alasql('SELECT member_name AS \'이름\', tel AS \'연락처\' FROM Member;', [], res => {
-        console.log('/////////////')
-        console.log('1장 3번 문제 답')
-        console.log('/////////////')
-        console.table(res)
-    })
+    console.log('/////////////')
+    console.log('1장 3번 문제 답')
+    console.log('/////////////')
+
+    console.log(`
+    이스케이프 처리
+    
+    1. 가격은 \\100
+    2. 1\t\'데이터2\'
+    `)
 }
 
-console.log('ji 의 chap1 로드됨')
+console.log('ji 의 chap2 로드됨')
 
 module.exports = (populatedAlasql)=> {
     // 클로저처리가 되어서 populatedAlasql 가 클로저 내부에 저장됨.

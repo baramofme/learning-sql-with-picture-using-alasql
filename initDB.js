@@ -19,7 +19,7 @@ function initDB(){
             
             
             CREATE TABLE Book
-            (\`id\` int, \`book_name\` varchar(11), \`publisher\` varchar(3), \`price\` int, \`release_date\` datetime)
+            (\`id\` int, \`book_name\` varchar(45), \`publisher\` varchar(45), \`price\` int, \`release_date\` datetime)
             ;
             
             INSERT INTO Book
@@ -206,7 +206,9 @@ function initDB(){
                 (1, '약용 입욕제', 100, 70),
                 (2, '약용 핸드솝', 23, 700),
                 (3, '천연 아로마 입욕제', 4, 120),
-                (4, '거품 목욕제', 23, 120)
+                (4, '거품 목욕제', 23, 120),
+                (5, '비누 딸기100%', 10, 150),
+                (6, '100%우유_입욕제', 15, 140)
             ;
             
             
@@ -243,7 +245,7 @@ function initDB(){
             
             
             CREATE TABLE Search_1
-            (\`id\` int, \`val\` varchar(1))
+            (\`id\` int, \`val\` varchar(5))
             ;
             
             INSERT INTO Search_1
@@ -251,8 +253,13 @@ function initDB(){
             VALUES
                 (1, 'A'),
                 (2, 'a'),
-                (3, 'A'),
-                (4, 'B')
+                (3, 'A  '),
+                (4, 'B'),
+                (5, 'b'),
+                (6, 'C'),
+                (7, 'c'),
+                (8, 'D'),
+                (9, 'd')
             ;
             
             
