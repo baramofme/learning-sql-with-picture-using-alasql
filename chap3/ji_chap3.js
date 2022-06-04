@@ -1,7 +1,7 @@
 function review(alasql){
     console.log(`
     /////////////
-    2장 내용 복습
+    3장 내용 복습
     /////////////
     
     1. 논리 연산자
