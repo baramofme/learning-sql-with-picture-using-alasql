@@ -245,38 +245,84 @@ function review(alasql){
 
     8. 전체 테이블에 대한 조건인 WHERE 과
        GROUP BY 로 나뉘어진 묶음에 대한 조건인 HAVING 
+       
+    >console.table(alasql('SELECT pref, COUNT(age) FROM Inquiry GROUP BY pref'))
+    ┌─────────┬──────────┬────────────┐
+    │ (index) │   pref   │ COUNT(age) │
+    ├─────────┼──────────┼────────────┤
+    │    0    │ '서울시' │     3      │
+    │    1    │ '충청도' │     2      │
+    │    2    │ '경기도' │     1      │
+    └─────────┴──────────┴────────────┘
+
+    >console.table(alasql('SELECT pref, COUNT(age) FROM Inquiry GROUP BY pref HAVING COUNT(age) >= 2'))
+    ┌─────────┬──────────┬────────────┐
+    │ (index) │   pref   │ COUNT(age) │
+    ├─────────┼──────────┼────────────┤
+    │    0    │ '서울시' │     3      │
+    │    1    │ '충청도' │     2      │
+    └─────────┴──────────┴────────────┘
+    
+    
+    >console.table(alasql('SELECT pref, star, age FROM Inquiry WHERE star >=2'))
+    >console.table(alasql('SELECT pref, SUM(age) FROM Inquiry WHERE star >=2 GROUP BY pref'))
+    
+    WHERE 로 전체 레코드를 걸러낸 뒤         하위 그룹으로 묶고                     함수 적용 결과
+    ┌─────────┬──────────┬──────┬─────┐ ┌─────────┬──────────┬──────┬─────┐ ┌─────────┬──────────┬──────────┐
+    │ (index) │   pref   │ star │ age │ │ (index) │   pref   │ star │ age │ │ (index) │   pref   │ SUM(age) │
+    ├─────────┼──────────┼──────┼─────┤ ├─────────┼──────────┼──────┼─────┤ ├─────────┼──────────┼──────────┤
+    │    0    │ '서울시'  │  2   │ 20  │ │    0    │ '서울시'  │  2   │ 20  │  │    0    │ '서울시'  │    50    │
+    │    1    │ '충청도'  │  5   │ 30  │ │    4    │ '서울시'  │  4   │ 30  │  │    1    │ '충청도'  │    50    │
+    │    2    │ '경기도'  │  3   │ 40  │ └─────────┴──────────┴──────┴─────┘ │    2    │ '경기도'  │    40    │
+    │    3    │ '충청도'  │  4   │ 20  │ ┌─────────┬──────────┬──────┬─────┐ └─────────┴──────────┴──────────┘
+    │    4    │ '서울시'  │  4   │ 30  │ │ (index) │   pref   │ star │ age │
+    └─────────┴──────────┴──────┴─────┘ ├─────────┼──────────┼──────┼─────┤
+                                        │    1    │ '충청도'  │  5   │ 30  │
+                                        │    3    │ '충청도'  │  4   │ 20  │
+                                        └─────────┴──────────┴──────┴─────┘
+                                        ┌─────────┬──────────┬──────┬─────┐
+                                        │ (index) │   pref   │ star │ age │
+                                        ├─────────┼──────────┼──────┼─────┤
+                                        │    2    │ '경기도'  │  3   │ 40  │
+                                        └─────────┴──────────┴──────┴─────┘
+    
+    >console.table(alasql('SELECT pref, SUM(age) FROM Inquiry WHERE star >=2 GROUP BY pref HAVING SUM(age) >=50'))
+    
+    하위 그룹으로 묶고                      HAVING 으로 각 그룹을 걸러낸다.         최종적으로 HAVING 을 거진 결과
+     ┌─────────┬──────────┬──────┬─────┐ ┌─────────┬──────────┬─────────┐  ┌─────────┬──────────┬──────────┐
+     │ (index) │   pref   │ star │ age │ │ (index) │   pref   │ SUM(age)│  │ (index) │   pref   │ SUM(age) │
+     ├─────────┼──────────┼──────┼─────┤ ├─────────┼──────────┼─────────┤  ├─────────┼──────────┼──────────┤
+     │    0    │ '서울시'  │  2   │ 20  │ │    0    │ '서울시'  │  50     │  │    0    │ '서울시'  │    50    │
+     │    4    │ '서울시'  │  4   │ 30    └─────────┴──────────┴─────────┘  │    1    │ '충청도'  │    50    │
+     └─────────┴──────────┴──────┴─────┘                                   └─────────┴──────────┴──────────┘
+     ┌─────────┬──────────┬──────┬─────┐ ┌─────────┬──────────┬─────────┐
+     │ (index) │   pref   │ star │ age │ │ (index) │   pref   │ SUM(age)│  
+     ├─────────┼──────────┼──────┼─────┤ ├─────────┼──────────┼─────────┤
+     │    1    │ '충청도'  │  5   │ 30  │ │    1    │ '충청도'  │  50     │  
+     │    3    │ '충청도'  │  4   │ 20  │ └─────────┴──────────┴─────────┘  
+     └─────────┴──────────┴──────┴─────┘  
+     ┌─────────┬──────────┬──────┬─────┐ ┌─────────┬──────────┬─────────┐
+     │ (index) │   pref   │ star │ age │ │ (index) │   pref   │ SUM(age)│ 
+     ├─────────┼──────────┼──────┼─────┤ ├─────────┼──────────┼─────────┤ <=  SUM(age) >= 50 해당 안되므로 걸러진다.
+     │    2    │ '경기도'  │  3   │ 40  │ │    2    │ '경기도'  │  40     │  
+     └─────────┴──────────┴──────┴─────┘ └─────────┴──────────┴─────────┘   
+    
+    9. SELECT 에서 AS 로 붙인 별명은 GROUP BY 등 뒤쪽에서 사용하지 못한다.
+
+    >console.table(alasql('SELECT pref AS "시도군청", SUM(age) FROM Inquiry WHERE star >=2 GROUP BY "시도군청" HAVING SUM(age) >=50'))
+    Uncaught SyntaxError: Unexpected identifier
+    
+    FROM 부터 시작되고, 최종적으로 SELECT DISTINCT 이렇게 실행되기 때문에, SELECT 에서 붙인 별명을 뒤쪽에서 접근하는 것은 순서적으로 안되는 게 맞다.
+
 
     `)
 }
 function q1(alasql){
     alasql(
-        `
-            SELECT 
-                id, student_name, height, weight, (height >=160 AND weight > 60) 
-            FROM 
-                Student
-            ORDER BY
-                height >=160 AND weight > 60 DESC,
-                height ASC, weight ASC
-            ;
-                
-            SELECT 
-                id, student_name, height, height >=170, weight,  weight <50, blood_type,blood_type = 'AB', (height >=170 OR weight <50 OR blood_type = 'AB') AS '모두 OR'
-            FROM 
-                Student
-            WHERE
-                height >=170
-                OR weight < 50
-                OR blood_type = 'AB'
-            ;
-
-            SELECT
-                id, student_name, blood_type, NOT blood_type = 'A'
-            FROM
-                Student
-            ORDER BY
-                NOT blood_type = 'A' DESC
-            ;
+        `  
+            SELECT DISTINCT category FROM Menu;
+            SELECT DISTINCT category, price FROM Menu ORDER BY category ASC, price DESC;
+            SELECT category FROM Menu GROUP BY category;
 
         `, [], resArr => {
             console.log('/////////////')
@@ -295,132 +341,43 @@ function q2(alasql){
         console.log('1장 2번 문제 답')
         console.log('/////////////')
         console.log(`
-        1. height 가 155 이하, 또는 165 이상
-           height <= 155 AND height > 165
-          
-           
-           결과 레코드 개수 2
-           
-           => 땡!!! 또는 이니까 OR 인데 AND 씀.. 끙. ㅎㅎ 디테일이 부족하구만요.
+        1. 
+        >console.table(alasql('SELECT COUNT(*) FROM Menu'))
+        ┌─────────┬──────────┐
+        │ (index) │ COUNT(*) │
+        ├─────────┼──────────┤
+        │    0    │    9     │
+        └─────────┴──────────┘
             
-        2. blood_type이 0 또는 weight가 60 이상 중 어느 한쪽만
-            blood_type = 'o' XOR height >= 165
-            
-            결과 레코드 개수 1
-            
-            => 땡!!!!! ㅎ.. 적어가면서 해야하나보다. 눈대중으로 자꾸 틀리네.
-            
-            >console.table(alasql('SELECT student_name, height, blood_type, blood_type="O", height >=165, blood_type = "O" AND (NOT height >=165) OR (NOT blood_type = "O" AND height >=165) AS "blood_type = 0 XOR height >=165"
-            FROM Student ORDER BY blood_type = "O" AND (NOT height >=165) OR (NOT blood_type = "O" AND height >=165) DESC'))
-            ┌─────────┬──────────────┬────────┬────────────┬──────────────────┬───────────────┬───────────────────────────────────┐
-            │ (index) │ student_name │ height │ blood_type │ blood_type = 'O' │ height >= 165 │ 'blood_type = 0 XOR height >=165' │
-            ├─────────┼──────────────┼────────┼────────────┼──────────────────┼───────────────┼───────────────────────────────────┤
-            │    0    │   '이민지'   │  160   │    'O'     │       true       │     false     │               true                │
-            │    1    │   '김민준'   │  172   │    'A'     │      false       │     true      │               true                │
-            │    2    │   '박서연'   │  158   │    'B'     │      false       │     false     │               false               │
-            │    3    │   '강예은'   │  161   │    'A'     │      false       │     false     │               false               │
-            │    4    │   '김동현'   │  168   │    'O'     │       true       │     true      │               false               │
-            │    5    │   '이수민'   │  153   │    'AB'    │      false       │     false     │               false               │
-            └─────────┴──────────────┴────────┴────────────┴──────────────────┴───────────────┴───────────────────────────────────┘
-
+        2. 
+        >console.table(alasql('SELECT category, MAX(price), AVG(price), ((MAX(price)+MIN(price))/2), SUM(price)/COUNT(*) FROM Menu GROUP BY category'))
+        ┌─────────┬──────────┬────────────┬───────────────────┬─────────────────────────────────┬───────────────────────┐
+        │ (index) │ category │ MAX(price) │    AVG(price)     │ ((MAX(price) + MIN(price)) / 2) │ SUM(price) / COUNT(*) │
+        ├─────────┼──────────┼────────────┼───────────────────┼─────────────────────────────────┼───────────────────────┤
+        │    0    │  'FOOD'  │    1200    │       1100        │              1050               │         1100          │
+        │    1    │ 'DRINK'  │    600     │ 533.3333333333334 │               550               │   533.3333333333334   │
+        │    2    │ 'SWEETS' │    500     │        450        │               450               │          450          │
+        └─────────┴──────────┴────────────┴───────────────────┴─────────────────────────────────┴───────────────────────┘
              
-        3. height 가  155 오늘 이상 그리고 165 이하, 또는 weight 가 50이상 그리고 65 이하
-           height > 155 AND height <= 165 => 이민지, 강예은, 김동현
-           OR
-           weight > 50 AND weight <= 65 이민지, 김진중, 강예은, 김동현
-          
-           // AND 우선순위가 높아서 정상적인 순저대로 연산됨.
+        3. 
+          -1. WHERE 절에 들어가 수 있는 것. 
+              category = 'FOOD',
+           => 
+          -2. SELECT 절에 들어갈 수 있는 것. 상수, 집약 함수, 집약 컬럼명
+           전부 다
+           =>  GROUP BY 집약 키, 경우에는.. SELECT 에 집약키 컬럼명, 상수, 집약 함수 쓸 수 있음
+            category 와 COUNT(*)
+          -3. GROUP BY 절에 들어갈 수 있는 것
+            함수 외에 나머지 다.
+            => SELECT 에 price 가 있으니까.. GROUP BY 에도 price 를 해야 결과가 제대로 나옴.
+          -4. HAVING 절에 들어갈 수 있는 것. 상수, 집약 함수, 집약 컬럼명 
+           전부 다.
+           => HAVING 이니까. 집약함수와 비교조건 들어감.
+           category = 'FOOD' 와 COUNT(*) > 2
            
-           결과 레코드 개수 4
-           
-           => 땡... 첫번째 조건을 제대로 안 봄..
-           
-           >console.table(alasql('SELECT student_name, height > 155 AND height <=165, weight > 50 AND weight <= 65  FROM Student WHERE height > 155 AND height <=165 OR weight > 50 AND weight <= 65'))
-            ┌─────────┬──────────────┬────────────────────────────────┬──────────────────────────────┐
-            │ (index) │ student_name │ height > 155 AND height <= 165 │ weight > 50 AND weight <= 65 │
-            ├─────────┼──────────────┼────────────────────────────────┼──────────────────────────────┤
-            │    0    │   '이민지'   │              true              │             true             │
-            │    1    │   '김민준'   │             false              │             true             │
-            │    2    │   '박서연'   │              true              │            false             │
-            │    3    │   '강예은'   │              true              │             true             │
-            │    4    │   '김동현'   │             false              │             true             │
-            └─────────┴──────────────┴────────────────────────────────┴──────────────────────────────┘
-
-     
+           사실.. 위에서 그냥 넣으면 결과는 나온다. 다만 문제에서는 결과가 제대로 나오는 케이스로 좁히고자 한 거 가다.
         `)
 
-}
-
-function q3(alasql){
-    console.log('/////////////')
-    console.log('1장 3번 문제 답')
-    console.log('/////////////')
-
-    console.log(`
-    BETWEEN 과 IN 을 사용해서 SQL 문 바꾸기
-    
-    1. WHERE birthday BETWEEN '1998-01-01' AND '1999-12-31'
-    2. WHERE blood_type IN ('A', 'B')
-    `)
-}
-
-function q4(alasql){
-    console.log('/////////////')
-    console.log('1장 4번 문제 답')
-    console.log('/////////////')
-
-    console.log(`
-    연산자 우선순위를 고려해서 BMI 결과가 제대로 나오는 식을 선택하기
-    
-    현재 키는 cm 를 씀.
-    [체중(kg)/키(m) 의 제곱]
-    
-    weight / ( (height/100) * (height/100) )
-    
-    >console.table(alasql('SELECT student_name, height, weight, weight/((height/100)*(height/100)) AS BMI FROM Student'))
-    ┌─────────┬──────────────┬────────┬────────┬────────────────────┐
-    │ (index) │ student_name │ height │ weight │        BMI         │
-    ├─────────┼──────────────┼────────┼────────┼────────────────────┤
-    │    0    │   '이민지'   │  160   │   51   │ 19.921874999999996 │
-    │    1    │   '김민준'   │  172   │   65   │ 21.971335857220122 │
-    │    2    │   '박서연'   │  158   │   48   │ 19.227687870533565 │
-    │    3    │   '강예은'   │  161   │   55   │ 21.218317194552675 │
-    │    4    │   '김동현'   │  168   │   62   │  21.9671201814059  │
-    │    5    │   '이수민'   │  153   │   42   │ 17.941817249775728 │
-    └─────────┴──────────────┴────────┴────────┴────────────────────┘
- 
-    `)
-}
-
-function q5(alasql){
-    console.log('/////////////')
-    console.log('1장 5번 문제 답')
-    console.log('/////////////')
-
-    console.log(`
-    1. 우선순위 : AND > OR
-       - 0 AND 1 = 0
-       - 0 OR 0 OR 1 = 1
-       
-    2. 우선순위 : () > AND > OR
-       - (0 OR 0) = 0, (1 OR 1) = 1
-       - 0 AND 1 = 0
-       
-    3. 연산자 % = MOD 나눈 나머지
-       - 20 MOD 5 = 20 % 5 = 4(나머지 0)
-       - 나머지 0
-       
-    4. 연산자 DIV = 나눈 몫
-       - 30 DIV 12 = 30/12 = 2.5(나머지 0)
-       - 몫 2.5
-       
-       => 땡 DIV 는 몫의 정수부만 반환한다고 한다. 그러니 2
-       
-    5. 연산자 우선순위 : 곱셉나눗셈 > 덧셈뺄셈
-       - 2*3 = 6, 4*1 = 4
-       - 1 + 6 - 4 = 3   
-         
-    `)
 }
 
 console.log('ji 의 chap4 로드됨')
@@ -432,8 +389,5 @@ module.exports = (populatedAlasql)=> {
         review: () =>{ review(populatedAlasql)},
         q1: () =>{ q1(populatedAlasql) },
         q2: () =>{ q2(populatedAlasql) },
-        q3: () =>{ q3(populatedAlasql) },
-        q4: () =>{ q5(populatedAlasql) },
-        q5: () =>{ q5(populatedAlasql) }
     }
 }
