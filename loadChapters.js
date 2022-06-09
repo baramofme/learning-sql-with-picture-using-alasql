@@ -3,6 +3,7 @@ function load(context, populatedAlasql){
     const ji_chap2 = require("./chap2/ji_chap2")
     const ji_chap3 = require("./chap3/ji_chap3")
     const ji_chap4 = require("./chap4/ji_chap4")
+    const ji_chap5 = require("./chap4/ji_chap5")
 
     // jihoon
     context.ji = {
@@ -10,6 +11,7 @@ function load(context, populatedAlasql){
         chap2: ji_chap2(populatedAlasql),
         chap3: ji_chap3(populatedAlasql),
         chap4: ji_chap4(populatedAlasql),
+        chap5: ji_chap5(populatedAlasql),
     }
 // migol
     context.mi = {
